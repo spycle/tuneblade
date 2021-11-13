@@ -1,0 +1,10 @@
+{
+  "domain": "tune_blade",
+  "name": "Tune Blade Controller",
+  "documentation": "None",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@spycle"],
+  "version": "0.0.1",
+  "iot_class": "local_polling"
+}
