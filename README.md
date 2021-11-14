@@ -10,5 +10,5 @@ media_player:
     port: 57326
     device_id: '745C1C123F55@Living Room'
 ```
-Enter http://<host_ip:port>/devices in a browser to get the list of devices
+Enter http://<host_ip>:<port>/devices in a browser to get the list of devices
 
