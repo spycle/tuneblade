@@ -1,7 +1,7 @@
 {
   "domain": "tune_blade",
   "name": "Tune Blade Controller",
-  "documentation": "None",
+  "documentation": "www.none.com",
   "requirements": [],
   "dependencies": [],
   "codeowners": ["@spycle"],
