@@ -1,0 +1,12 @@
+{
+  "domain": "tuneblade",
+  "name": "TuneBlade",
+  "documentation": "https://github.com/spycle/tune_blade",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/spycle/tune_blade/issues",
+  "version": "0.0.1",
+  "config_flow": true,
+  "codeowners": [
+    "@spycle"
+  ]
+}
