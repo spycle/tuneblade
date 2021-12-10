@@ -1,37 +1,41 @@
-"""Constants for the TuneBlade integration."""
-
-import voluptuous as vol
-
-from homeassistant.components.media_player.const import (
-    SUPPORT_PLAY,
-    SUPPORT_PAUSE,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
-)
-from homeassistant.const import (
-    CONF_NAME, 
-    CONF_HOST, 
-    CONF_PORT, 
-    CONF_USERNAME, 
-    CONF_PASSWORD,
-    STATE_IDLE, 
-    STATE_OFF, 
-    STATE_PLAYING,
-)
-from datetime import timedelta
-
-DOMAIN = "tune_blade"
-PLATFORMS = ["media_player"]
+"""Constants for integration_blueprint."""
+# Base component constants
+NAME = "TuneBlade"
+DOMAIN = "tuneblade"
+DOMAIN_DATA = f"{DOMAIN}_data"
 VERSION = "0.0.1"
+ISSUE_URL = "https://github.com/spycle/tune_blade/issues"
 
-DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "TuneBlade Speaker"
+# Icons
+ICON = "mdi:cast-audio-variant"
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-    }
-)
+# Device classes
+MEDIA_PLAYER_DEVICE_CLASS = "speaker"
+
+# Platforms
+SWITCH = "switch"
+MEDIA_PLAYER = "media_player"
+PLATFORMS = [SWITCH, MEDIA_PLAYER]
+
+# Configuration and options
+CONF_ENABLED = "enabled"
+CONF_USERNAME = "username"
+CONF_PASSWORD = "password"
+CONF_AIRPLAY_PASSWORD = "airplay_password"
+CONF_DEVICE_ID = "device_id"
+CONF_HOST = "host"
+CONF_PORT = "port"
+
+# Defaults
+DEFAULT_NAME = DOMAIN
+
+
+STARTUP_MESSAGE = f"""
+-------------------------------------------------------------------
+{NAME}
+Version: {VERSION}
+This is a custom integration!
+If you have any issues with this you need to open an issue here:
+{ISSUE_URL}
+-------------------------------------------------------------------
+"""
