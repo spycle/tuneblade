@@ -2,7 +2,7 @@
 Home Assistant custom integration for controlling AirPlay devices connected to a TuneBlade server.
 
 ## Setup
-Add https://github.com/spycle/tune_blade as a custom repository in HACS.
+Add https://github.com/spycle/tuneblade as a custom repository in HACS.
 Instalation is then via the Integrations Page of Home Assistant.
 
 Details required;
