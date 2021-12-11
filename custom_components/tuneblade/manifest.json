@@ -1,9 +1,9 @@
 {
   "domain": "tuneblade",
   "name": "TuneBlade",
-  "documentation": "https://github.com/spycle/tune_blade",
+  "documentation": "https://github.com/spycle/tuneblade",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/spycle/tune_blade/issues",
+  "issue_tracker": "https://github.com/spycle/tuneblade/issues",
   "version": "0.0.1",
   "config_flow": true,
   "codeowners": [
