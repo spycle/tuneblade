@@ -4,7 +4,7 @@ NAME = "TuneBlade"
 DOMAIN = "tuneblade"
 DOMAIN_DATA = f"{DOMAIN}_data"
 VERSION = "0.0.1"
-ISSUE_URL = "https://github.com/spycle/tune_blade/issues"
+ISSUE_URL = "https://github.com/spycle/tuneblade/issues"
 
 # Icons
 ICON = "mdi:cast-audio-variant"
