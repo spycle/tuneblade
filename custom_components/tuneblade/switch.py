@@ -1,7 +1,7 @@
 """Switch platform for TuneBlade."""
 from homeassistant.components.switch import SwitchEntity
 
-from .const import DEFAULT_NAME, DOMAIN, ICON, SWITCH
+from .const import NAME, DOMAIN, ICON, SWITCH
 from .entity import TuneBladeEntity
 
 
