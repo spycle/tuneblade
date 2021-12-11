@@ -7,9 +7,10 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     STATE_OFF,
+    STATE_IDLE,
     STATE_PLAYING
     )
-from .const import DEFAULT_NAME, DOMAIN, ICON, MEDIA_PLAYER
+from .const import NAME, DOMAIN, ICON, MEDIA_PLAYER
 from .entity import TuneBladeEntity
 
 SUPPORTED_FEATURES = (
@@ -67,8 +68,10 @@ class TuneBladeMediaPlayer(TuneBladeEntity, MediaPlayerEntity):
 
     @property
     def state(self):
-        if self.coordinator.data.get("Status", "") in ['Connected','Connecting']:
+        if self.coordinator.data.get("SubState", "") == "Streaming" and self.coordinator.data.get("Status", "") in ['Connected','Connecting']:
             return STATE_PLAYING
+        elif self.coordinator.data.get("Status", "") in ['Connected','Connecting'] and self.coordinator.data.get("SubState", "") != "Streaming":
+            return STATE_IDLE
         else:
             return STATE_OFF
 
