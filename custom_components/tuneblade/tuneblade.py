@@ -26,8 +26,6 @@ class TuneBladeApiClient:
         self._airplay_password = airplay_password
         self._session = session
         self._url = "http://"+host+":"+port+"/devices/"+device_id
-        self._auth = auth
-        self._volume = 100
 
     async def async_get_data(self) -> dict:
         """Get data from the API."""
