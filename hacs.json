@@ -1,0 +1,5 @@
+{
+  "name": "TuneBlade",
+  "domains": ["switch", "media_player"],
+  "render_readme": true,
+}
