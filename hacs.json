@@ -1,10 +1,6 @@
 {
   "name": "TuneBlade",
   "content_in_root": false,
-  "domains": [
-    "switch",
-    "media_player"
-  ],
   "zip_release": true,
   "filename": "tuneblade-0.0.1.zip",
   "render_readme": true
