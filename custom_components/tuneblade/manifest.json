@@ -4,7 +4,7 @@
   "documentation": "https://github.com/spycle/tuneblade",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/spycle/tuneblade/issues",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "config_flow": true,
   "codeowners": [
     "@spycle"
