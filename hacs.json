@@ -2,7 +2,7 @@
   "name": "TuneBlade",
   "content_in_root": false,
   "domains": [
-    "switch", 
+    "switch",
     "media_player"
   ],
   "zip_release": true,
