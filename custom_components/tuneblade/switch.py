@@ -28,6 +28,8 @@ class TuneBladeBinarySwitch(TuneBladeEntity, SwitchEntity):
     def name(self):
         """Return the name of the switch."""
         device = self.coordinator.data.get("Name")
+        if device == None:
+            device = "Master"
         name = device+" "+NAME
         return name
 
