@@ -20,12 +20,14 @@ class TuneBladeApiClient:
         """Sample API Client."""
         self._host = host
         self._port = port
-        self._device_id = device_id
         self._username = username
         self._password = password
         self._airplay_password = airplay_password
         self._session = session
-        self._url = "http://"+host+":"+port+"/devices/"+device_id
+        if device_id == "Master":
+            self._url = "http://"+host+":"+port+"/master"
+        else:
+        	self._url = "http://"+host+":"+port+"/devices/"+device_id
 
     async def async_get_data(self) -> dict:
         """Get data from the API."""
@@ -38,6 +40,10 @@ class TuneBladeApiClient:
     async def async_set_volume(self, volume: str) -> None:
         """Get data from the API."""
         await self.api_wrapper("put", self._url, data={"Password": self._airplay_password, "Volume": str(int(volume*100))}, headers=HEADERS)
+
+    async def async_set_volume_master(self, volume: str) -> None:
+        """Get data from the API."""
+        await self.api_wrapper("put", self._url, data={"Status": "Connect", "Volume": str(int(volume*100))}, headers=HEADERS)
 
     async def api_wrapper(
         self, method: str, url: str, data: dict = {}, headers: dict = {}
