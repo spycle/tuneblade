@@ -40,13 +40,19 @@ class TuneBladeMediaPlayer(TuneBladeEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        await self.coordinator.api.async_set_volume(volume)
-        await self.coordinator.async_request_refresh()
+        if self.coordinator.data.get("Name") == None:
+            await self.coordinator.api.async_set_volume_master(volume)
+            await self.coordinator.async_request_refresh()
+        else:
+            await self.coordinator.api.async_set_volume(volume)
+            await self.coordinator.async_request_refresh()
 
     @property
     def name(self):
         """Return the name of the switch."""
         device = self.coordinator.data.get("Name")
+        if device == None:
+            device = "Master"
         name = device+" "+NAME
         return name
 
@@ -68,7 +74,9 @@ class TuneBladeMediaPlayer(TuneBladeEntity, MediaPlayerEntity):
 
     @property
     def state(self):
-        if self.coordinator.data.get("SubState", "") == "Streaming" and self.coordinator.data.get("Status", "") in ['Connected','Connecting']:
+        if self.coordinator.data.get("Name") == None and self.coordinator.data.get("Status", "") in ['Connected','Connecting']:
+            return STATE_PLAYING
+        elif self.coordinator.data.get("SubState", "") == "Streaming" and self.coordinator.data.get("Status", "") in ['Connected','Connecting']:
             return STATE_PLAYING
         elif self.coordinator.data.get("Status", "") in ['Connected','Connecting'] and self.coordinator.data.get("SubState", "") != "Streaming":
             return STATE_IDLE
