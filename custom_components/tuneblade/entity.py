@@ -26,9 +26,14 @@ class TuneBladeEntity(CoordinatorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return {
-            "status": str(self.coordinator.data.get("Status")),
-            "sub_state": str(self.coordinator.data.get("SubState")),
-            "buffering": str(self.coordinator.data.get("Buffering")),
-            "buffering_percent": str(self.coordinator.data.get("BufferingPercent")),
-        }
+        if self.coordinator.data.get("Name") == None:
+            return {
+                "status": str(self.coordinator.data.get("Status"))
+            }
+        else:
+            return {
+                "status": str(self.coordinator.data.get("Status")),
+                "sub_state": str(self.coordinator.data.get("SubState")),
+                "buffering": str(self.coordinator.data.get("Buffering")),
+                "buffering_percent": str(self.coordinator.data.get("BufferingPercent")),
+            }
