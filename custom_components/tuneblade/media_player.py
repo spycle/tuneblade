@@ -19,6 +19,8 @@ SUPPORTED_FEATURES = (
     | SUPPORT_TURN_OFF
 )
 
+SUPPORTED_FEATURES_MASTER = (SUPPORT_VOLUME_SET)
+
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -86,4 +88,7 @@ class TuneBladeMediaPlayer(TuneBladeEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORTED_FEATURES
+        if self.coordinator.data.get("Name") == None:
+            return SUPPORTED_FEATURES_MASTER
+        else:
+            return SUPPORTED_FEATURES
