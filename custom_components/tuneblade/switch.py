@@ -1,44 +1,55 @@
-"""Switch platform for TuneBlade."""
+import logging
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import NAME, DOMAIN, ICON, SWITCH
-from .entity import TuneBladeEntity
+from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_devices):
-    """Setup sensor platform."""
+async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([TuneBladeBinarySwitch(coordinator, entry)])
+    devices = coordinator.data or {}
+    entities = [
+        TuneBladeSwitch(coordinator, device_id, device_data)
+        for device_id, device_data in devices.items()
+    ]
+    async_add_entities(entities, update_before_add=True)
 
+class TuneBladeSwitch(CoordinatorEntity, SwitchEntity):
+    def __init__(self, coordinator, device_id, device_data):
+        super().__init__(coordinator)
+        self._device_id = device_id
+        self._name = device_data.get("name", device_id)
 
-class TuneBladeBinarySwitch(TuneBladeEntity, SwitchEntity):
-    """TuneBlade switch class."""
-
-    async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
-        """Turn on the switch."""
-        await self.coordinator.api.async_conn("Connect")
-        await self.coordinator.async_request_refresh()
-
-    async def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
-        """Turn off the switch."""
-        await self.coordinator.api.async_conn("Disconnect")
-        await self.coordinator.async_request_refresh()
+    @property
+    def unique_id(self):
+        safe_name = self._name.replace(" ", "_")
+        return f"{self._device_id}@{safe_name}_switch"
 
     @property
     def name(self):
-        """Return the name of the switch."""
-        device = self.coordinator.data.get("Name")
-        if device == None:
-            device = "Master"
-        name = device+" "+NAME
-        return name
-
-    @property
-    def icon(self):
-        """Return the icon of this switch."""
-        return ICON
+        return self._name
 
     @property
     def is_on(self):
-        """Return true if the switch is on."""
-        return self.coordinator.data.get("Status", "") in ['Connected','Connecting']
+        device = self.coordinator.data.get(self._device_id)
+        return device.get("connected", False) if device else False
+
+    async def async_turn_on(self):
+        await self.coordinator.client.connect(self._device_id)
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self):
+        await self.coordinator.client.disconnect(self._device_id)
+        await self.coordinator.async_request_refresh()
+
+    @property
+    def available(self):
+        return self._device_id in self.coordinator.data
+
+    async def async_added_to_hass(self):
+        """Register callback when entity is added."""
+        self.coordinator.async_add_listener(self._handle_coordinator_update)
+
+    def _handle_coordinator_update(self):
+        self.async_write_ha_state()
