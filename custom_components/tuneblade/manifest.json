@@ -1,12 +1,12 @@
 {
   "domain": "tuneblade",
   "name": "TuneBlade",
+  "codeowners": ["@spycle"],
+  "config_flow": true,
+  "dependencies": [],
   "documentation": "https://github.com/spycle/tuneblade",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/spycle/tuneblade/issues",
-  "version": "0.0.5",
-  "config_flow": true,
-  "codeowners": [
-    "@spycle"
-  ]
+  "requirements": [],
+  "version": "0.0.6"
 }
