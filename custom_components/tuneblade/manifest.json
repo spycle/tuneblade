@@ -1,8 +1,8 @@
 {
   "domain": "tuneblade",
   "name": "TuneBlade",
-  "bluetooth": [],
   "codeowners": ["@spycle"],
+  "bluetooth": [],
   "config_flow": true,
   "dependencies": [],
   "dhcp": [],
