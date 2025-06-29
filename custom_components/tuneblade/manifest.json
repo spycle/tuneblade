@@ -1,8 +1,8 @@
 {
   "domain": "tuneblade",
   "name": "TuneBlade",
-  "codeowners": ["@spycle"],
   "bluetooth": [],
+  "codeowners": ["@spycle"],
   "config_flow": true,
   "dependencies": [],
   "dhcp": [],
@@ -11,12 +11,12 @@
   "iot_class": "local_polling",
   "mqtt": [],
   "requirements": [],
+  "usb": [],
   "version": "2025.06.1",
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
       "name": "*@tuneblade*"
     }
-  ],
-  "usb": []
+  ]
 }
