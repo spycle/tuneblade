@@ -3,7 +3,7 @@
 NAME = "TuneBlade"
 DOMAIN = "tuneblade"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.0.5"
+VERSION = "2025.06.1"
 ISSUE_URL = "https://github.com/spycle/tuneblade/issues"
 
 # Icons
@@ -20,8 +20,6 @@ PLATFORMS = [SWITCH, MEDIA_PLAYER]
 # Configuration and options
 CONF_ENABLED = "enabled"
 CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
-CONF_AIRPLAY_PASSWORD = "airplay_password"
 CONF_DEVICE_ID = "device_id"
 CONF_HOST = "host"
 CONF_PORT = "port"
