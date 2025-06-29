@@ -3,10 +3,21 @@
   "name": "TuneBlade",
   "codeowners": ["@spycle"],
   "config_flow": true,
+  "dhcp": [],
+  "usb": [],
+  "mqtt": [],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "*@TuneBlade*"
+    }
+  ],
+  "bluetooth": [],
+  "hub": true,
   "dependencies": [],
   "documentation": "https://github.com/spycle/tuneblade",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/spycle/tuneblade/issues",
   "requirements": [],
-  "version": "0.0.6"
+  "version": "2025.06.1"
 }
