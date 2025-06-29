@@ -1,125 +1,103 @@
-"""Adds config flow for TuneBlade."""
-from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+import logging
 import voluptuous as vol
 
+from homeassistant import config_entries
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import DOMAIN
 from .tuneblade import TuneBladeApiClient
-from .const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_DEVICE_ID,
-    CONF_AIRPLAY_PASSWORD,
-    CONF_HOST,
-    CONF_PORT,
-    DOMAIN,
-    PLATFORMS,
+
+_LOGGER = logging.getLogger(__name__)
+
+MAIN_SCHEMA = vol.Schema(
+    {
+        vol.Required("host"): str,
+        vol.Required("port"): str,
+    }
 )
 
-class TuneBladeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for TuneBlade."""
+
+class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for TuneBlade."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
-        """Initialize."""
-        self._errors = {}
+    async def async_step_user(self, user_input=None) -> FlowResult:
+        """Handle the user-initiated configuration."""
+        if user_input is None:
+            return self.async_show_form(step_id="user", data_schema=MAIN_SCHEMA)
 
-    async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        self._errors = {}
+        session = async_get_clientsession(self.hass)
 
-        if user_input is not None:
-            valid = await self._test_credentials(
-                user_input[CONF_HOST], user_input[CONF_PORT], user_input[CONF_DEVICE_ID], user_input[CONF_PASSWORD], user_input[CONF_AIRPLAY_PASSWORD]
-            )
-            if valid:
-                return self.async_create_entry(
-                    title=user_input[CONF_DEVICE_ID], data=user_input
-                )
-            else:
-                self._errors["base"] = "auth"
-
-            return await self._show_config_form(user_input)
-
-        user_input = {}
-        # Provide defaults for form
-        user_input[CONF_PASSWORD] = ""
-        user_input[CONF_DEVICE_ID] = ""
-        user_input[CONF_HOST] = "localhost"
-        user_input[CONF_PORT] = ""
-        user_input[CONF_AIRPLAY_PASSWORD] = ""
-
-        return await self._show_config_form(user_input)
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        return TuneBladeOptionsFlowHandler(config_entry)
-
-    async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
-        """Show the configuration form to edit location data."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): str,
-                    vol.Required(CONF_DEVICE_ID, default=user_input[CONF_DEVICE_ID]): str,
-                    vol.Optional(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
-                    vol.Optional(CONF_AIRPLAY_PASSWORD, default=user_input[CONF_AIRPLAY_PASSWORD]): str,
-                }
-            ),
-            errors=self._errors,
-        )
-
-    async def _test_credentials(self, host, port, device_id, password, airplay_password):
-        """Return true if credentials is valid."""
         try:
-            username = "MYTUNEBLADE"
-            auth = None
-            if password:
-                auth = aiohttp.BasicAuth(username, password=password)
-            session = async_create_clientsession(self.hass)
-            client = TuneBladeApiClient(host, port, device_id, username, password, airplay_password, session, auth)
-            await client.async_get_data()
-            return True
-        except Exception:  # pylint: disable=broad-except
-            pass
-        return False
+            client = TuneBladeApiClient(
+                host=user_input["host"],
+                port=user_input["port"],
+                session=session,
+            )
+            devices = await client.async_get_data()
+            if devices is None:
+                raise Exception("Failed to connect or get devices")
+        except Exception as err:
+            _LOGGER.error("Error connecting to TuneBlade hub: %s", err)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=MAIN_SCHEMA,
+                errors={"base": "cannot_connect"},
+            )
 
+        await self.async_set_unique_id(f"{user_input['host']}:{user_input['port']}")
+        self._abort_if_unique_id_configured()
 
-class TuneBladeOptionsFlowHandler(config_entries.OptionsFlow):
-    """TuneBlade config flow options handler."""
+        return self.async_create_entry(title="TuneBlade Hub", data=user_input)
 
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
+    async def async_step_zeroconf(self, discovery_info: dict) -> FlowResult:
+        """Handle a Zeroconf discovery."""
+        _LOGGER.debug("Discovered TuneBlade via Zeroconf: %s", discovery_info)
 
-    async def async_step_init(self, user_input=None):  # pylint: disable=unused-argument
-        """Manage the options."""
-        return await self.async_step_user()
+        host = discovery_info["host"]
+        port = discovery_info["port"]
+        name = discovery_info["name"]
 
-    async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
+        await self.async_set_unique_id(f"{host}:{port}")
+        self._abort_if_unique_id_configured()
+
+        self.context["title_placeholders"] = {"name": name}
+        self._discovered_host = host
+        self._discovered_port = port
+
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(self, user_input=None) -> FlowResult:
+        """Confirm setting up TuneBlade after discovery."""
         if user_input is not None:
-            self.options.update(user_input)
-            return await self._update_options()
+            session = async_get_clientsession(self.hass)
+            try:
+                client = TuneBladeApiClient(
+                    host=self._discovered_host,
+                    port=self._discovered_port,
+                    session=session,
+                )
+                devices = await client.async_get_data()
+                if devices is None:
+                    raise Exception("Failed to get data")
+            except Exception as err:
+                _LOGGER.error("Error connecting to TuneBlade during discovery: %s", err)
+                return self.async_abort(reason="cannot_connect")
+
+            return self.async_create_entry(
+                title=f"TuneBlade ({self._discovered_host})",
+                data={
+                    "host": self._discovered_host,
+                    "port": self._discovered_port,
+                },
+            )
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(x, default=self.options.get(x, True)): bool
-                    for x in sorted(PLATFORMS)
-                }
-            ),
-        )
-
-    async def _update_options(self):
-        """Update config entry options."""
-        return self.async_create_entry(
-            title=self.config_entry.data.get(CONF_DEVICE_ID), data=self.options
+            step_id="confirm",
+            description_placeholders={
+                "name": self.context["title_placeholders"]["name"]
+            },
         )
