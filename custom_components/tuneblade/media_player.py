@@ -1,5 +1,6 @@
 """Media Player platform for TuneBlade."""
 from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_TURN_ON,
@@ -14,12 +15,12 @@ from .const import NAME, DOMAIN, ICON, MEDIA_PLAYER
 from .entity import TuneBladeEntity
 
 SUPPORTED_FEATURES = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
 )
 
-SUPPORTED_FEATURES_MASTER = (SUPPORT_VOLUME_SET)
+SUPPORTED_FEATURES_MASTER = MediaPlayerEntityFeature.SUPPORT_VOLUME_SET
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup sensor platform."""
