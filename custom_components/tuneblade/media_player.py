@@ -1,95 +1,94 @@
-"""Media Player platform for TuneBlade."""
+import logging
 from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.media_player.const import (
-    SUPPORT_VOLUME_SET,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF
+    MediaPlayerState,
+    MediaPlayerEntityFeature,
 )
-from homeassistant.const import (
-    STATE_OFF,
-    STATE_IDLE,
-    STATE_PLAYING
-    )
-from .const import NAME, DOMAIN, ICON, MEDIA_PLAYER
-from .entity import TuneBladeEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-SUPPORTED_FEATURES = (
-    MediaPlayerEntityFeature.VOLUME_SET
-    | MediaPlayerEntityFeature.TURN_ON
-    | MediaPlayerEntityFeature.TURN_OFF
-)
+from .const import DOMAIN
 
-SUPPORTED_FEATURES_MASTER = MediaPlayerEntityFeature.SUPPORT_VOLUME_SET
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_devices):
-    """Setup sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([TuneBladeMediaPlayer(coordinator, entry)])
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    entities = [
+        TuneBladeMediaPlayer(coordinator, device_id, device_data)
+        for device_id, device_data in coordinator.data.items()
+    ]
+    _LOGGER.debug("Adding %d media player(s): %s", len(entities), [e.name for e in entities])
+    async_add_entities(entities, True)
 
+class TuneBladeMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
+    def __init__(self, coordinator, device_id, device_data):
+        super().__init__(coordinator)
+        self.device_id = device_id
+        self._attr_name = device_data["name"]
+        safe_name = self._attr_name.replace(" ", "_")
+        self._attr_unique_id = f"{device_id}@{safe_name}"
+        self._attr_volume_level = None
+        self._attr_state = MediaPlayerState.OFF
+        self._attr_supported_features = (
+            MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.VOLUME_SET
+        )
 
-class TuneBladeMediaPlayer(TuneBladeEntity, MediaPlayerEntity):
-    """TuneBlade Media Player class."""
+    @property
+    def available(self) -> bool:
+        return self.device_id in self.coordinator.data
 
-    async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
-        """Turn on the switch."""
-        await self.coordinator.api.async_conn("Connect")
+    async def async_turn_on(self):
+        await self.coordinator.client.connect(self.device_id)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
-        """Turn off the switch."""
-        await self.coordinator.api.async_conn("Disconnect")
+    async def async_turn_off(self):
+        await self.coordinator.client.disconnect(self.device_id)
         await self.coordinator.async_request_refresh()
 
     async def async_set_volume_level(self, volume):
-        """Set volume level, range 0..1."""
-        if self.coordinator.data.get("Name") == None:
-            await self.coordinator.api.async_set_volume_master(volume)
-            await self.coordinator.async_request_refresh()
+        await self.coordinator.client.set_volume(self.device_id, int(volume * 100))
+        await self.coordinator.async_request_refresh()
+
+    async def async_added_to_hass(self):
+        """Register callback when entity is added."""
+        self.coordinator.async_add_listener(self._handle_coordinator_update)
+        self._handle_coordinator_update()
+
+    def _handle_coordinator_update(self):
+        device_data = self.coordinator.data.get(self.device_id)
+        if device_data is None:
+            self._attr_state = MediaPlayerState.OFF
+            self._attr_volume_level = None
         else:
-            await self.coordinator.api.async_set_volume(volume)
-            await self.coordinator.async_request_refresh()
+            code = str(device_data.get("status_code", "0"))
+            if code == "100":
+                self._attr_state = MediaPlayerState.PLAYING
+            elif code == "200":
+                self._attr_state = MediaPlayerState.IDLE
+            elif code == "0":
+                self._attr_state = MediaPlayerState.OFF
+            else:
+                self._attr_state = MediaPlayerState.UNAVAILABLE
+
+            volume = device_data.get("volume")
+            self._attr_volume_level = volume / 100 if volume is not None else None
+
+        self.async_write_ha_state()
 
     @property
-    def name(self):
-        """Return the name of the switch."""
-        device = self.coordinator.data.get("Name")
-        if device == None:
-            device = "Master"
-        name = device+" "+NAME
-        return name
+    def extra_state_attributes(self):
+        device_data = self.coordinator.data.get(self.device_id, {})
+        code = str(device_data.get("status_code", "0"))
+        status_map = {
+            "0": "disconnected",
+            "100": "playing",
+            "200": "standby",
+        }
 
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        volume = self.coordinator.data.get("Volume", "")
-        return volume / 100.0
-
-    @property
-    def icon(self):
-        """Return the icon of this switch."""
-        return ICON
-
-    @property
-    def is_on(self):
-        """Return true if the switch is on."""
-        return self.coordinator.data.get("Status", "") in ['Connected','Connecting']
-
-    @property
-    def state(self):
-        if self.coordinator.data.get("Name") == None and self.coordinator.data.get("Status", "") in ['Connected','Connecting']:
-            return STATE_PLAYING
-        elif self.coordinator.data.get("SubState", "") == "Streaming" and self.coordinator.data.get("Status", "") in ['Connected','Connecting']:
-            return STATE_PLAYING
-        elif self.coordinator.data.get("Status", "") in ['Connected','Connecting'] and self.coordinator.data.get("SubState", "") != "Streaming":
-            return STATE_IDLE
-        else:
-            return STATE_OFF
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        if self.coordinator.data.get("Name") == None:
-            return SUPPORTED_FEATURES_MASTER
-        else:
-            return SUPPORTED_FEATURES
+        return {
+            "device_name": device_data.get("name"),
+            "status_code": code,
+            "status_text": status_map.get(code, "unknown"),
+            "volume": device_data.get("volume"),
+        }

@@ -1,87 +1,91 @@
-"""TuneBlade API Client."""
 import logging
-import asyncio
-import socket
-from typing import Optional
-import aiohttp
-import async_timeout
+from aiohttp import ClientSession, ClientResponseError
 
-TIMEOUT = 10
-
-
-_LOGGER: logging.Logger = logging.getLogger(__package__)
-
-HEADERS = {"Content-type": "application/json; charset=UTF-8"}
+_LOGGER = logging.getLogger(__name__)
 
 class TuneBladeApiClient:
-    def __init__(
-        self, host: str, port: str, device_id: str, username: str, password: str, airplay_password: str, session: aiohttp.ClientSession, auth
-    ) -> None:
-        """Sample API Client."""
+    def __init__(self, host: str, port: int, session: ClientSession):
         self._host = host
         self._port = port
-        self._username = username
-        self._password = password
-        self._airplay_password = airplay_password
         self._session = session
-        if device_id == "Master":
-            self._url = "http://"+host+":"+port+"/master"
-        else:
-        	self._url = "http://"+host+":"+port+"/devices/"+device_id
+        self._base_url = f"http://{host}:{port}/v2"
 
-    async def async_get_data(self) -> dict:
-        """Get data from the API."""
-        return await self.api_wrapper("get", self._url)
+    def _get_auth(self):
+        # Add auth if required by TuneBlade settings (usually not needed)
+        return None
 
-    async def async_conn(self, value: str) -> None:
-        """Get data from the API."""
-        await self.api_wrapper("put", self._url, data={"Password": self._airplay_password, "Status": value}, headers=HEADERS)
-
-    async def async_set_volume(self, volume: str) -> None:
-        """Get data from the API."""
-        await self.api_wrapper("put", self._url, data={"Password": self._airplay_password, "Volume": str(int(volume*100))}, headers=HEADERS)
-
-    async def async_set_volume_master(self, volume: str) -> None:
-        """Get data from the API."""
-        await self.api_wrapper("put", self._url, data={"Status": "Connect", "Volume": str(int(volume*100))}, headers=HEADERS)
-
-    async def api_wrapper(
-        self, method: str, url: str, data: dict = {}, headers: dict = {}
-    ) -> dict:
-        """Get information from the API."""
+    async def async_get_data(self):
+        """Fetch all devices with their connection and volume status."""
         try:
-            async with async_timeout.timeout(TIMEOUT):
-                if method == "get":
-                    response = await self._session.get(url, headers=headers)
-                    return await response.json()
+            async with self._session.get(self._base_url, auth=self._get_auth()) as resp:
+                resp.raise_for_status()
+                raw_text = await resp.text()
 
-                elif method == "put":
-                    await self._session.put(url, headers=headers, json=data)
+            _LOGGER.debug("Raw TuneBlade response: %s", repr(raw_text))
 
-                elif method == "patch":
-                    await self._session.patch(url, headers=headers, json=data)
+            if not raw_text.strip():
+                _LOGGER.error("Empty response received from TuneBlade — cannot continue")
+                return {}
 
-                elif method == "post":
-                    await self._session.post(url, headers=headers, json=data)
+            devices = {}
+            lines = raw_text.strip().splitlines()
 
-        except asyncio.TimeoutError as exception:
-            _LOGGER.error(
-                "Timeout error fetching information from %s - %s",
-                url,
-                exception,
-            )
+            for line in lines:
+                parts = line.split()
+                if len(parts) < 3:
+                    continue
 
-        except (KeyError, TypeError) as exception:
-            _LOGGER.error(
-                "Error parsing information from %s - %s",
-                url,
-                exception,
-            )
-        except (aiohttp.ClientError, socket.gaierror) as exception:
-            _LOGGER.error(
-                "Error fetching information from %s - %s",
-                url,
-                exception,
-            )
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.error("Something really wrong happened! - %s", exception)
+                device_id = parts[0]
+                connected_flag = parts[1]
+                volume_str = parts[2]
+                device_name = " ".join(parts[3:]) if len(parts) > 3 else device_id
+
+                try:
+                    connected = int(connected_flag) != 0
+                except ValueError:
+                    connected = False
+                    
+                try:
+                    volume = int(volume_str)
+                except ValueError:
+                    volume = None
+
+                devices[device_id] = {
+                    "id": device_id,
+                    "name": device_name.strip(),
+                    "connected": connected,
+                    "volume": volume,
+                    "status_code": connected_flag,  # <-- Add raw status code here
+                }
+
+            return devices
+
+        except Exception as err:
+            _LOGGER.error("Failed to fetch device data from TuneBlade: %s", err)
+            return {}
+
+    async def connect(self, device_id: str):
+        """Connect to a specific AirPlay receiver."""
+        url = f"{self._base_url}/{device_id}/Status/Connect"
+        await self._send_command(url, f"connect {device_id}")
+
+    async def disconnect(self, device_id: str):
+        """Disconnect from a specific AirPlay receiver."""
+        url = f"{self._base_url}/{device_id}/Status/Disconnect"
+        await self._send_command(url, f"disconnect {device_id}")
+
+    async def set_volume(self, device_id: str, volume: int):
+        """Set the volume (0–100) for a specific AirPlay receiver."""
+        url = f"{self._base_url}/{device_id}/Volume/{volume}"
+        await self._send_command(url, f"set volume {volume} for {device_id}")
+
+    async def _send_command(self, url: str, description: str):
+        """Send a command to TuneBlade and handle errors."""
+        try:
+            async with self._session.get(url, auth=self._get_auth()) as resp:
+                resp.raise_for_status()
+            _LOGGER.debug("Successfully sent command: %s", description)
+        except ClientResponseError as err:
+            _LOGGER.error("HTTP error on %s: %s", description, err)
+        except Exception as err:
+            _LOGGER.error("Failed to %s: %s", description, err)
