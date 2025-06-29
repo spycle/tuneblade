@@ -9,11 +9,10 @@
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
-      "name": "*@TuneBlade*"
+      "name": "*@tuneblade*"
     }
   ],
   "bluetooth": [],
-  "hub": true,
   "dependencies": [],
   "documentation": "https://github.com/spycle/tuneblade",
   "iot_class": "local_polling",
