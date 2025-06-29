@@ -1,6 +1,5 @@
 {
   "name": "TuneBlade",
   "content_in_root": false,
-  "domains": "media_player",
   "render_readme": true
 }
