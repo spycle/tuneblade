@@ -3,7 +3,7 @@
 NAME = "TuneBlade"
 DOMAIN = "tuneblade"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "2025.06.1"
+VERSION = "2025.06.3"
 ISSUE_URL = "https://github.com/spycle/tuneblade/issues"
 
 # Icons
