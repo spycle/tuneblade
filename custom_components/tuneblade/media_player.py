@@ -12,12 +12,24 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = [
-        TuneBladeMediaPlayer(coordinator, device_id, device_data)
-        for device_id, device_data in coordinator.data.items()
-    ]
-    _LOGGER.debug("Adding %d media player(s): %s", len(entities), [e.name for e in entities])
-    async_add_entities(entities, True)
+    added_ids = set()
+
+    async def _update_entities():
+        new_entities = []
+        for device_id, device_data in coordinator.data.items():
+            if device_id not in added_ids:
+                entity = TuneBladeMediaPlayer(coordinator, device_id, device_data)
+                new_entities.append(entity)
+                added_ids.add(device_id)
+                _LOGGER.debug("Added new media player: %s", device_data.get("name", device_id))
+        if new_entities:
+            async_add_entities(new_entities, True)
+
+    # Initial add
+    await _update_entities()
+
+    # Register future additions
+    coordinator.async_add_listener(_update_entities)
 
 class TuneBladeMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def __init__(self, coordinator, device_id, device_data):

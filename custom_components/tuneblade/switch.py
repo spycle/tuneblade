@@ -8,12 +8,24 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    devices = coordinator.data or {}
-    entities = [
-        TuneBladeSwitch(coordinator, device_id, device_data)
-        for device_id, device_data in devices.items()
-    ]
-    async_add_entities(entities, update_before_add=True)
+    added_device_ids = set()
+
+    async def _update_entities():
+        new_entities = []
+        for device_id, device_data in (coordinator.data or {}).items():
+            if device_id not in added_device_ids:
+                entity = TuneBladeSwitch(coordinator, device_id, device_data)
+                new_entities.append(entity)
+                added_device_ids.add(device_id)
+                _LOGGER.debug("Added new TuneBlade switch: %s", device_data.get("name", device_id))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    # Initial add
+    await _update_entities()
+
+    # Track future additions
+    coordinator.async_add_listener(_update_entities)
 
 class TuneBladeSwitch(CoordinatorEntity, SwitchEntity):
     def __init__(self, coordinator, device_id, device_data):
