@@ -5,6 +5,7 @@ from homeassistant.components.media_player.const import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.const import STATE_UNAVAILABLE
 
 from .const import DOMAIN
 
@@ -81,7 +82,7 @@ class TuneBladeMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             elif code == "0":
                 self._attr_state = MediaPlayerState.OFF
             else:
-                self._attr_state = MediaPlayerState.UNAVAILABLE
+                self._attr_state = STATE_UNAVAILABLE
 
             volume = device_data.get("volume")
             self._attr_volume_level = volume / 100 if volume is not None else None
