@@ -1,9 +1,10 @@
-"""Constants for integration_blueprint."""
+"""Constants for TuneBlade integration."""
+
 # Base component constants
 NAME = "TuneBlade"
 DOMAIN = "tuneblade"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "2025.06.3"
+VERSION = "2025.06.4"
 ISSUE_URL = "https://github.com/spycle/tuneblade/issues"
 
 # Icons
@@ -26,7 +27,6 @@ CONF_PORT = "port"
 
 # Defaults
 DEFAULT_NAME = DOMAIN
-
 
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------

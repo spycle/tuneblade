@@ -24,6 +24,11 @@ class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @property
+    def is_hub(self) -> bool:
+        """Return True to indicate this config entry is a hub."""
+        return True
+
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the user-initiated configuration."""
         if user_input is None:
