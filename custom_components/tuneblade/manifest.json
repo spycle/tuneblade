@@ -7,12 +7,13 @@
   "dependencies": [],
   "dhcp": [],
   "documentation": "https://github.com/spycle/tuneblade",
+  "integration_type": "hub",
   "issue_tracker": "https://github.com/spycle/tuneblade/issues",
   "iot_class": "local_polling",
   "mqtt": [],
   "requirements": [],
   "usb": [],
-  "version": "2025.06.3",
+  "version": "2025.06.4",
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
