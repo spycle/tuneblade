@@ -7,8 +7,7 @@ from .tuneblade import TuneBladeApiClient
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=15)
-
+SCAN_INTERVAL = timedelta(seconds=10)
 
 class TuneBladeDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator to fetch data from the TuneBlade hub."""
@@ -24,9 +23,11 @@ class TuneBladeDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             devices_data = await self.client.async_get_data()
             if not devices_data:
-                raise UpdateFailed("No data returned from TuneBlade hub.")
+                raise UpdateFailed("No device data returned from TuneBlade hub.")
+
             _LOGGER.debug("Fetched device data: %s", devices_data)
             return devices_data
+
         except Exception as err:
             _LOGGER.exception("Error fetching data from TuneBlade hub")
             raise UpdateFailed(f"Error communicating with TuneBlade hub: {err}") from err
