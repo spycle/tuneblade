@@ -13,11 +13,11 @@
   "mqtt": [],
   "requirements": [],
   "usb": [],
-  "version": "2025.06.4",
+  "version": "2025.06.5",
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
-      "name": "*@tuneblade*"
+      "name": "*une?lade._http._tcp.local."
     }
   ]
 }
