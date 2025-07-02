@@ -1,33 +1,22 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "title": "TuneBlade",
-                "description": "TuneBlade Remote",
-                "data": {
-                    "host": "Host",
-                    "port": "Port",
-                    "device_id": "DeviceID",
-                    "password": "Password",
-                    "airplay_password": "AirPlay Password"
-                }
-            }
-        },
-        "error": {
-            "auth": "Username/Password is wrong."
-        },
-        "abort": {
-            "single_instance_allowed": "Only a single instance is allowed."
+  "config": {
+    "step": {
+      "user": {
+        "title": "TuneBlade",
+        "description": "TuneBlade Remote",
+        "data": {
+          "host": "Host",
+          "port": "Port"
         }
+      },
+      "confirm": {
+        "title": "Confirm TuneBlade Device",
+        "description": "TuneBlade was discovered at {ip}. Do you want to add it?"
+      }
     },
-    "options": {
-        "step": {
-            "user": {
-                "data": {
-                    "media_player": "Media Player enabled",
-                    "switch": "Switch enabled"
-                }
-            }
-        }
+    "abort": {
+      "single_instance_allowed": "Only a single instance is allowed.",
+      "cannot_connect": "Unable to connect to TuneBlade device."
     }
+  }
 }

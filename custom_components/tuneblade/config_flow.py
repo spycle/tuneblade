@@ -1,108 +1,102 @@
+from __future__ import annotations
+
 import logging
-import voluptuous as vol
+from typing import Any
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import voluptuous as vol
+from aiohttp import ClientSession
 
 from .const import DOMAIN
 from .tuneblade import TuneBladeApiClient
 
 _LOGGER = logging.getLogger(__name__)
 
-MAIN_SCHEMA = vol.Schema(
-    {
-        vol.Required("host"): str,
-        vol.Required("port"): str,
-    }
-)
-
 
 class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for TuneBlade."""
-
     VERSION = 1
 
-    @property
-    def is_hub(self) -> bool:
-        """Return True to indicate this config entry is a hub."""
-        return True
+    def __init__(self) -> None:
+        self._discovery_info: dict[str, Any] = {}
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
-        """Handle the user-initiated configuration."""
-        if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=MAIN_SCHEMA)
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Manual user setup step."""
+        if user_input is not None:
+            name = user_input.get("name", "TuneBlade").split("@")[0].strip()
+            host = user_input["host"]
+            port = user_input["port"]
 
-        session = async_get_clientsession(self.hass)
+            unique_id = f"{name}_{host}_{port}"
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
 
-        try:
-            client = TuneBladeApiClient(
-                host=user_input["host"],
-                port=user_input["port"],
-                session=session,
-            )
-            devices = await client.async_get_data()
-            if devices is None:
-                raise Exception("Failed to connect or get devices")
-        except Exception as err:
-            _LOGGER.error("Error connecting to TuneBlade hub: %s", err)
-            return self.async_show_form(
-                step_id="user",
-                data_schema=MAIN_SCHEMA,
-                errors={"base": "cannot_connect"},
+            self._discovery_info = {
+                "host": host,
+                "port": port,
+                "name": name,
+            }
+            return self.async_create_entry(
+                title=name,
+                data=self._discovery_info,
             )
 
-        await self.async_set_unique_id(f"{user_input['host']}:{user_input['port']}")
-        self._abort_if_unique_id_configured()
+        data_schema = vol.Schema(
+            {
+                vol.Required("host"): str,
+                vol.Required("port", default=443): int,
+                vol.Optional("name", default="TuneBlade"): str,
+            }
+        )
+        return self.async_show_form(step_id="user", data_schema=data_schema)
 
-        return self.async_create_entry(title="TuneBlade Hub", data=user_input)
-
-    async def async_step_zeroconf(self, discovery_info: dict) -> FlowResult:
-        """Handle a Zeroconf discovery."""
+    async def async_step_zeroconf(self, discovery_info: Any) -> FlowResult:
+        """Handle zeroconf discovery."""
         _LOGGER.debug("Discovered TuneBlade via Zeroconf: %s", discovery_info)
 
-        host = discovery_info["host"]
-        port = discovery_info["port"]
-        name = discovery_info["name"]
+        host = discovery_info.host
+        port = discovery_info.port
+        name = discovery_info.name.split("@")[0].strip()
 
-        await self.async_set_unique_id(f"{host}:{port}")
+        unique_id = f"{name}_{host}_{port}"
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
+        self._discovery_info = {
+            "host": host,
+            "port": port,
+            "name": name,
+        }
+
+        # Probe the device by attempting to fetch data via TuneBladeApiClient
+        session = ClientSession()
+        client = TuneBladeApiClient(host, port, session)
+        try:
+            devices = await client.async_get_data()
+        finally:
+            await session.close()
+
+        if not devices:
+            return self.async_abort(reason="cannot_connect")
+
         self.context["title_placeholders"] = {"name": name}
-        self._discovered_host = host
-        self._discovered_port = port
 
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None) -> FlowResult:
-        """Confirm setting up TuneBlade after discovery."""
+    async def async_step_confirm(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Confirm addition after discovery."""
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
-            try:
-                client = TuneBladeApiClient(
-                    host=self._discovered_host,
-                    port=self._discovered_port,
-                    session=session,
-                )
-                devices = await client.async_get_data()
-                if devices is None:
-                    raise Exception("Failed to get data")
-            except Exception as err:
-                _LOGGER.error("Error connecting to TuneBlade during discovery: %s", err)
-                return self.async_abort(reason="cannot_connect")
-
             return self.async_create_entry(
-                title=f"TuneBlade ({self._discovered_host})",
-                data={
-                    "host": self._discovered_host,
-                    "port": self._discovered_port,
-                },
+                title=self.context.get("title_placeholders", {}).get("name", "TuneBlade"),
+                data=self._discovery_info,
             )
 
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                "name": self.context["title_placeholders"]["name"]
+                "name": self.context.get("title_placeholders", {}).get("name", "TuneBlade"),
+                "ip": self._discovery_info["host"],
             },
+            data_schema=vol.Schema({}),
+            last_step=True,
         )
