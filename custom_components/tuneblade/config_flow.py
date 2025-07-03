@@ -43,8 +43,8 @@ class TuneBladeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required("host"): str,
-                vol.Required("port", default=443): int,
+                vol.Required("host", default='localhost'): str,
+                vol.Required("port", default=54412): int,
                 vol.Optional("name", default="TuneBlade"): str,
             }
         )
