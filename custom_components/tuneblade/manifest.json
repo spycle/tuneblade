@@ -8,12 +8,12 @@
   "dhcp": [],
   "documentation": "https://github.com/spycle/tuneblade",
   "integration_type": "hub",
-  "issue_tracker": "https://github.com/spycle/tuneblade/issues",
   "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/spycle/tuneblade/issues",
   "mqtt": [],
   "requirements": [],
   "usb": [],
-  "version": "2025.06.6",
+  "version": "2025.06.8",
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

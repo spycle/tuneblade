@@ -84,7 +84,7 @@ class TuneBladeDeviceSwitch(CoordinatorEntity, SwitchEntity):
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, self._device_id)},
-            "via_device": (DOMAIN, "master"),  # Link to hub device
+            "via_device": (DOMAIN, "MASTER"),  # Link to hub device
             "name": self._name,
             "manufacturer": "TuneBlade",
         }
@@ -104,10 +104,6 @@ class TuneBladeHubSwitch(CoordinatorEntity, SwitchEntity):
         super().__init__(coordinator)
         self._attr_name = "Master"
         self._attr_unique_id = "tuneblade_master_switch"
-
-    @property
-    def unique_id(self):
-        return "tuneblade_hub_master_switch"
 
     @property
     def is_on(self):
