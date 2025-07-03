@@ -13,7 +13,7 @@
   "mqtt": [],
   "requirements": [],
   "usb": [],
-  "version": "2025.06.7",
+  "version": "2025.06.8",
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
