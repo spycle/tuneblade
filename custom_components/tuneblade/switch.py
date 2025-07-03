@@ -102,7 +102,7 @@ class TuneBladeHubSwitch(CoordinatorEntity, SwitchEntity):
 
     def __init__(self, coordinator):
         super().__init__(coordinator)
-        self._attr_name = "TuneBlade Master Switch"
+        self._attr_name = "Master"
         self._attr_unique_id = "tuneblade_master_switch"
 
     @property
@@ -134,7 +134,7 @@ class TuneBladeHubSwitch(CoordinatorEntity, SwitchEntity):
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, "MASTER")},
-            "name": "TuneBlade Hub",
+            "name": self._attr_name,
             "manufacturer": "TuneBlade",
             "entry_type": "service",
         }
