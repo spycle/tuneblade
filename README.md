@@ -1,7 +1,7 @@
-TuneBlade is a simple Windows tray utility that lets you stream system-wide audio to AirPort Express, Apple TV, AirPlay enabled speakers and HiFi receivers, and to AirPlay audio receiving applications such as ShairPort, XBMC/Kodi. Connect an Alexa/Google/other speaker to the host and output via AirPlay.
-
 # TuneBlade Remote
 Home Assistant custom integration for controlling AirPlay devices via TuneBlade Remote.
+
+TuneBlade is a simple Windows tray utility that lets you stream system-wide audio to AirPort Express, Apple TV, AirPlay enabled speakers and HiFi receivers, and to AirPlay audio receiving applications such as ShairPort, XBMC/Kodi. Connect an Alexa/Google/other speaker to the host and output via AirPlay.
 
 ## Setup
 Install TuneBlade on a Windows device.
