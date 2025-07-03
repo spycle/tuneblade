@@ -51,8 +51,8 @@ class TuneBladeHubMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def __init__(self, coordinator):
         super().__init__(coordinator)
         self.device_id = "MASTER"
-        self._attr_name = "TuneBlade Master"
-        self._attr_unique_id = "tuneblade_master"
+        self._attr_name = "Master"
+        self._attr_unique_id = "tuneblade_master_media_player"
         self._attr_volume_level = None
         self._attr_state = MediaPlayerState.OFF
         self._attr_supported_features = (
@@ -125,7 +125,7 @@ class TuneBladeHubMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def device_info(self):
         return {
-            "identifiers": {(DOMAIN, self.device_id)},
+            "identifiers": {(DOMAIN, "MASTER")},
             "name": self._attr_name,
             "manufacturer": "TuneBlade",
             "entry_type": "service",  # Mark as hub/service device
