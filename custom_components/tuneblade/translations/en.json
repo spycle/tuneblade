@@ -6,12 +6,13 @@
         "description": "TuneBlade Remote",
         "data": {
           "host": "Host",
-          "port": "Port"
+          "port": "Port",
+          "name": "Name"
         }
       },
       "confirm": {
-        "title": "Confirm TuneBlade Device",
-        "description": "TuneBlade was discovered at {ip}. Do you want to add it?"
+        "title": "Confirm TuneBlade Remote",
+        "description": "TuneBlade was discovered at {ip}. Do you want to add {name}?"
       }
     },
     "abort": {
